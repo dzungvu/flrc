@@ -23,11 +23,11 @@ class MainActivity : AppCompatActivity() {
         val btnStart = findViewById<Button>(R.id.btn_start)
 
         lyricView.postDelayed({
-            lyricView.setLyricData(R.raw.sample_en)
+            lyricView.setLyricData(R.raw.count)
         }, 1000)
 
         btnStart.setOnClickListener {
-            lyricView.startKaraokeAnimation()
+            lyricView.startKaraokeAnimation(34_000)
         }
     }
 

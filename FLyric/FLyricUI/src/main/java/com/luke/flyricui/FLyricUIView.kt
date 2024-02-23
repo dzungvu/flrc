@@ -41,6 +41,9 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
 
     private val startOffset = 0f
 
+    //region view setup
+    private var textAlignMode = Layout.Alignment.ALIGN_NORMAL
+
     //region lyric data
     private var lyricData: LyricData? = null
     //endregion
@@ -273,14 +276,14 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         lyricData.lyrics.forEachIndexed { index, it ->
             val text = it.content
             val staticLayout = StaticLayout.Builder.obtain(text, 0, text.length, textPaint, width)
-                .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                .setAlignment(textAlignMode)
                 .setLineSpacing(1f, 1f)
                 .setIncludePad(true)
                 .build()
             normalStaticLayouts.add(staticLayout)
             val highlightedStaticLayout =
                 StaticLayout.Builder.obtain(text, 0, text.length, highlightedTextPaint, width)
-                    .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                    .setAlignment(textAlignMode)
                     .setLineSpacing(1f, 1f)
                     .setIncludePad(true)
                     .build()
@@ -294,7 +297,11 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
 
             //region calculate for word
             if(it.words.isNotEmpty()) {
-                var wordOffset = 0f
+                var wordOffset = getStartTextOffsetInStaticLayout(
+                    staticLayout = staticLayout,
+                    textPaint = textPaint,
+                    lyric = it
+                )
                 it.words.forEach {
                     val wordWidth = textPaint.measureText(it.content)
                     it.endMs?.let { endMs ->
@@ -305,6 +312,26 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
                     it.wordOffset = spaceWidth * it.index + wordOffset
                     wordOffset += wordWidth + spaceWidth
                 }
+            }
+        }
+    }
+
+    private fun getStartTextOffsetInStaticLayout(staticLayout: StaticLayout, textPaint: TextPaint, lyric: LyricData.Lyric): Float {
+        val layoutWidth = staticLayout.width
+        val textWidth = textPaint.measureText(staticLayout.text.toString())
+        lyric.width = textWidth
+        return when(staticLayout.alignment) {
+            null,
+            Layout.Alignment.ALIGN_NORMAL -> {
+                0f
+            }
+
+            Layout.Alignment.ALIGN_CENTER -> {
+                (layoutWidth - textWidth) / 2
+            }
+
+            Layout.Alignment.ALIGN_OPPOSITE -> {
+                layoutWidth - textWidth
             }
         }
     }
@@ -340,14 +367,14 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         }
     }
 
-    fun startKaraokeAnimation() {
-        val animator = ValueAnimator.ofFloat(0f, 277_000f)
+    fun startKaraokeAnimation(duration: Long) {
+        val animator = ValueAnimator.ofFloat(0f, duration.toFloat())
         animator.addUpdateListener { animation ->
             val animatedValue = animation.animatedValue as Float
             setCurrentTime(animatedValue.toLong())
         }
         animator.interpolator = LinearInterpolator()
-        animator.duration = 277_000
+        animator.duration = duration
         animator.start()
         Log.d("FLyricUIView", "startKaraokeAnimation")
     }
@@ -426,10 +453,11 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
                         canvas.restore()
                     } else {
                         currentWord?.let { currentWord ->
-                            highlightEnd = currentWord.wordOffset + ((currentTime - currentWord.startMs.toFloat()) * currentWord.msPerPx)
-                            Log.d("FLyricUIView", "curWord: ${currentWord.content} curTime: $currentTime wordStartMs: ${currentWord.startMs} curWordMsPx: ${currentWord.msPerPx} ==> highlightEnd: $highlightEnd")
+                            Log.d("FLyricUIView", "curWord: ${currentWord.content} curTime: $currentTime wordStartMs: ${currentWord.startMs} curWordMsPx: ${currentWord.msPerPx} ==> highlightEnd: $highlightEnd vs ${lyric.width}")
                             val staticLayout = normalStaticLayouts[index]
                             val highlightedStaticLayout = highlightedStaticLayouts[index]
+                            highlightEnd = currentWord.wordOffset + ((currentTime - currentWord.startMs.toFloat()) * currentWord.msPerPx)
+
                             canvas.save()
                             canvas.translate(0f, offsetKeeper[index] ?: 0f)
                             canvas.clipRect(0f, 0f, highlightEnd, height.toFloat())

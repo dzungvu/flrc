@@ -13,12 +13,19 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent=".5" />
 
+    <androidx.constraintlayout.widget.Guideline
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:id="@+id/guideline_end"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent=".7"/>
+
     <com.luke.flyricui.FLyricUIView
         android:id="@+id/f_lyric_ui_view"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="@id/guideline_top"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/guideline_end"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 

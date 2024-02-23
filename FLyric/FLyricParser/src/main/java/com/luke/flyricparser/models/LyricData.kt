@@ -10,7 +10,8 @@ data class LyricData(
         val startMs: Long,
         val endMs: Long? = null,
         val content: String,
-        val words: ArrayList<Word> = arrayListOf()
+        val words: ArrayList<Word> = arrayListOf(),
+        var width: Float = 0f
     )
 
     data class Word(

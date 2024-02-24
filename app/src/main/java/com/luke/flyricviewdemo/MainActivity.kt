@@ -23,7 +23,7 @@ class MainActivity : AppCompatActivity() {
         val btnStart = findViewById<Button>(R.id.btn_start)
 
         lyricView.postDelayed({
-            lyricView.setLyricData(R.raw.count)
+            lyricView.setLyricData(R.raw.sample_en)
         }, 1000)
 
         btnStart.setOnClickListener {

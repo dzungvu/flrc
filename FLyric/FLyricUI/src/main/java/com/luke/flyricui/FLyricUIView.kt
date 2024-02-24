@@ -31,9 +31,6 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
 
     private val lrcParser = FLRCParser()
 
-//    private var staticLayout: StaticLayout? = null
-//    private var highlightedStaticLayout: StaticLayout? = null
-
     private var normalStaticLayouts = mutableListOf<StaticLayout>()
     private var highlightedStaticLayouts = mutableListOf<StaticLayout>()
 
@@ -42,7 +39,7 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
     private val startOffset = 0f
 
     //region view setup
-    private var textAlignMode = Layout.Alignment.ALIGN_NORMAL
+    private var textAlignMode = Layout.Alignment.ALIGN_CENTER
 
     //region lyric data
     private var lyricData: LyricData? = null
@@ -270,16 +267,17 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
     }
 
     private fun initStaticLayoutsForLyric(lyricData: LyricData) {
-        var spaceWidth = textPaint.measureText(" ")
+        val spaceWidth = textPaint.measureText(" ")
         var yOffset = 0f
         val width = width - paddingLeft - paddingRight
-        lyricData.lyrics.forEachIndexed { index, it ->
-            val text = it.content
+        lyricData.lyrics.forEachIndexed { index, lyric ->
+            val text = lyric.content
             val staticLayout = StaticLayout.Builder.obtain(text, 0, text.length, textPaint, width)
                 .setAlignment(textAlignMode)
                 .setLineSpacing(1f, 1f)
                 .setIncludePad(true)
                 .build()
+            lyric.width = textPaint.measureText(lyric.content)
             normalStaticLayouts.add(staticLayout)
             val highlightedStaticLayout =
                 StaticLayout.Builder.obtain(text, 0, text.length, highlightedTextPaint, width)
@@ -296,30 +294,28 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
             yOffset += staticLayout.height
 
             //region calculate for word
-            if(it.words.isNotEmpty()) {
+            if(lyric.words.isNotEmpty()) {
                 var wordOffset = getStartTextOffsetInStaticLayout(
                     staticLayout = staticLayout,
-                    textPaint = textPaint,
-                    lyric = it
+                    lyric = lyric
                 )
-                it.words.forEach {
-                    val wordWidth = textPaint.measureText(it.content)
+                lyric.words.forEach {
+                    val wordWidth = staticLayout.paint.measureText(it.content)
                     it.endMs?.let { endMs ->
                         val wordDuration = endMs - it.startMs
                         it.msPerPx = wordWidth / wordDuration
                     }
 
-                    it.wordOffset = spaceWidth * it.index + wordOffset
-                    wordOffset += wordWidth + spaceWidth
+                    it.wordOffset = wordOffset
+                    wordOffset += (wordWidth + spaceWidth)
                 }
             }
         }
     }
 
-    private fun getStartTextOffsetInStaticLayout(staticLayout: StaticLayout, textPaint: TextPaint, lyric: LyricData.Lyric): Float {
+    private fun getStartTextOffsetInStaticLayout(staticLayout: StaticLayout, lyric: LyricData.Lyric): Float {
         val layoutWidth = staticLayout.width
-        val textWidth = textPaint.measureText(staticLayout.text.toString())
-        lyric.width = textWidth
+        val textWidth = lyric.width
         return when(staticLayout.alignment) {
             null,
             Layout.Alignment.ALIGN_NORMAL -> {
@@ -368,13 +364,21 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
     }
 
     fun startKaraokeAnimation(duration: Long) {
-        val animator = ValueAnimator.ofFloat(0f, duration.toFloat())
+        val endValue = lyricData?.lyrics?.last()?.let { lastLyric ->
+            if(lastLyric.words.isNotEmpty()) {
+                lastLyric.words.last().endMs
+            } else {
+                lastLyric.endMs ?: duration
+            }
+        } ?: duration
+
+        val animator = ValueAnimator.ofFloat(0f, endValue.toFloat())
         animator.addUpdateListener { animation ->
             val animatedValue = animation.animatedValue as Float
             setCurrentTime(animatedValue.toLong())
         }
         animator.interpolator = LinearInterpolator()
-        animator.duration = duration
+        animator.duration = endValue
         animator.start()
         Log.d("FLyricUIView", "startKaraokeAnimation")
     }
@@ -453,10 +457,9 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
                         canvas.restore()
                     } else {
                         currentWord?.let { currentWord ->
-                            Log.d("FLyricUIView", "curWord: ${currentWord.content} curTime: $currentTime wordStartMs: ${currentWord.startMs} curWordMsPx: ${currentWord.msPerPx} ==> highlightEnd: $highlightEnd vs ${lyric.width}")
                             val staticLayout = normalStaticLayouts[index]
                             val highlightedStaticLayout = highlightedStaticLayouts[index]
-                            highlightEnd = currentWord.wordOffset + ((currentTime - currentWord.startMs.toFloat()) * currentWord.msPerPx)
+                            highlightEnd = calculateOffsetForHighlightEnd(currentTime = currentTime, currentWord = currentWord)
 
                             canvas.save()
                             canvas.translate(0f, offsetKeeper[index] ?: 0f)
@@ -478,17 +481,6 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
                     staticLayout.draw(canvas)
                     canvas.restore()
                 }
-//                val staticLayout = normalStaticLayouts[index]
-//                val highlightedStaticLayout = highlightedStaticLayouts[index]
-//                canvas.save()
-//                canvas.translate(0f, staticLayout.height * index.toFloat())
-//                staticLayout.draw(canvas)
-//                canvas.restore()
-//                canvas.save()
-//                canvas.clipRect(0f, 0f, highlightEnd, staticLayout.height.toFloat())
-//                canvas.translate(0f, staticLayout.height * index.toFloat())
-//                highlightedStaticLayout.draw(canvas)
-//                canvas.restore()
             }
         }
     }
@@ -502,6 +494,12 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
             }
         }
         return gestureDetector.onTouchEvent(event)
+    }
+
+    private fun calculateOffsetForHighlightEnd(currentTime: Long, currentWord: LyricData.Word): Float {
+        return (currentWord.wordOffset + ((currentTime - currentWord.startMs) * currentWord.msPerPx)).also {
+            Log.d("FLyricUIView", "curWord: ${currentWord.content} curTime: $currentTime wordStartMs: ${currentWord.startMs} curWordMsPx: ${currentWord.msPerPx} curWordOffset: ${currentWord.wordOffset} ==> highlightEnd: $it")
+        }
     }
 
     private fun reset() {

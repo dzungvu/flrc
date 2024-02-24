@@ -97,26 +97,32 @@ object LyricUtil {
             )
         }
 
-        if (!lyricContent.startsWith(PATTERN_WORD.pattern())) {
-            splitStrings.removeFirst().let {
-                entryList.add(
-                    LyricData.Word(
-                        index = wordIndex,
-                        startMs = lineStartTime,
-                        endMs = null,
-                        rawValue = it,
-                        content = it,
-                        startInSentenceMs = 0,
-                        msPerPx = 0f,
-                        wordOffset = 0f
-                    )
-                )
-                stringBuilder.append(it)
-            }
-            wordIndex += 1
-        }
-
         while (matcher.find()) {
+            if(matcher.start() == 0 && wordIndex == 0){
+                //If matcher starts at 0, it means the first word is time,
+                //so the first element in splitStrings is empty and should be removed
+                splitStrings.removeFirst()
+            } else if (wordIndex == 0){
+                //If matcher is not starting at 0, it means the first word is not time,
+                //so the first element in splitStrings is the word
+                //and the start time of the word is the start time of the sentence
+                splitStrings.removeFirst().let {
+                    entryList.add(
+                        LyricData.Word(
+                            index = wordIndex,
+                            startMs = lineStartTime,
+                            endMs = null,
+                            rawValue = it,
+                            content = it,
+                            startInSentenceMs = 0,
+                            msPerPx = 0f,
+                            wordOffset = 0f
+                        )
+                    )
+                    stringBuilder.append(it)
+                }
+                wordIndex += 1
+            }
             val timeString = matcher.group(0) ?: ""
             splitStrings.removeFirst().let { word ->
                 entryList.add(

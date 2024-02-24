@@ -29,17 +29,23 @@ import kotlinx.coroutines.launch
 
 class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
 
+    //Lyric parser. This support SimpleLRC and EnhancedLRC
     private val lrcParser = FLRCParser()
 
     private var normalStaticLayouts = mutableListOf<StaticLayout>()
     private var highlightedStaticLayouts = mutableListOf<StaticLayout>()
 
-    private var textWidth = 0f
-
     private val startOffset = 0f
 
     //region view setup
     private var textAlignMode = Layout.Alignment.ALIGN_CENTER
+    private var normalTextColor = Color.WHITE
+    private var highlightedTextColor = Color.RED
+    //endregion
+
+    //view util value
+
+    //endregion
 
     //region lyric data
     private var lyricData: LyricData? = null
@@ -48,7 +54,7 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
     //region handle karaoke animation
     private var textPaint: TextPaint = TextPaint().apply {
         isAntiAlias = true
-        color = Color.WHITE
+        color = normalTextColor
         textSize = TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_SP,
             16f,
@@ -57,13 +63,13 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         typeface = Typeface.DEFAULT
     }
     private var highlightedTextPaint: TextPaint = TextPaint(textPaint).apply {
-        color = Color.RED
+        color = highlightedTextColor
     }
+
+    //region timeline
     private var currentLine = 0
-    private var currentWordIndex = 0
     private var currentWord: LyricData.Word? = null
     private var currentTime = 0L
-    private var text: String? = null
     private var highlightEnd = 0f
     //endregion
 
@@ -72,7 +78,6 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
     private var dampingRatioForViewPort: Float = SpringForce.DAMPING_RATIO_NO_BOUNCY
     private var stiffnessForLyric: Float = SpringForce.STIFFNESS_LOW
     private var stiffnessForViewPort: Float = SpringForce.STIFFNESS_VERY_LOW
-
     private var mCurrentOffset = 0f
 
     private var animateProgress = 0f
@@ -118,7 +123,6 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         GestureDetector(context, mSimpleOnGestureListener)
     }
     private var mViewPortOffset = 0f
-    private var lastTouchY = 0f
     private var isTouching = false
     private var isFling = false
 
@@ -207,11 +211,14 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
                     setLyricData(it)
                     invalidate()
                 }
-                launch(Dispatchers.Main) {
-//                    startKaraokeAnimation()
-                }
             }
         }
+    }
+
+    private fun setLyricData(lyricData: LyricData): Boolean {
+        this.lyricData = lyricData
+        initStaticLayoutsForLyric(lyricData)
+        return true
     }
 
     private fun findLyricLine(time: Long): Int {
@@ -258,12 +265,6 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
             }
         }
         return null
-    }
-
-    fun setLyricData(lyricData: LyricData): Boolean {
-        this.lyricData = lyricData
-        initStaticLayoutsForLyric(lyricData)
-        return true
     }
 
     private fun initStaticLayoutsForLyric(lyricData: LyricData) {
@@ -336,10 +337,6 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         return lyricData?.lyrics?.get(line)?.content ?: ""
     }
 
-    private fun calculateOffsetItem(itemHeight: Int, dividerHeight: Int): Float {
-        return (itemHeight - dividerHeight).toFloat()
-    }
-
     fun hasLrc(): Boolean {
         return lyricData?.lyrics?.isNotEmpty() == true
     }
@@ -363,7 +360,7 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         }
     }
 
-    fun startKaraokeAnimation(duration: Long) {
+    fun startKaraokeAnimation(duration: Long = 0) {
         val endValue = lyricData?.lyrics?.last()?.let { lastLyric ->
             if(lastLyric.words.isNotEmpty()) {
                 lastLyric.words.last().endMs
@@ -383,15 +380,7 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         Log.d("FLyricUIView", "startKaraokeAnimation")
     }
 
-    fun setText(text: String): Float {
-        this.text = text
-        textWidth = textPaint.measureText(text)
-        updateStaticLayout()
-        return textWidth
-    }
-
     private fun setCurrentTime(currentTime: Long) {
-
         this.currentTime = currentTime
         val index = findLyricLine(currentTime)
         if (index != currentLine && index != -1) {
@@ -404,11 +393,6 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
 
     }
 
-    //get current time
-    fun getCurrentTime(): Long {
-        return lyricData?.lyrics?.get(currentLine)?.startMs ?: 0
-    }
-
     private fun scrollToLine(index: Int) {
         val offset = offsetKeeper[index] ?: 0f
         mViewPortOffset = -offset
@@ -417,29 +401,6 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         Log.d("FLyricUIView", "current highlight offset: $mViewPortOffset")
         Log.d("FLyricUIView", "current highlight text: ${lyricData?.lyrics?.get(index)?.content}")
         invalidate()
-    }
-
-    fun setHighlightEnd(end: Float) {
-        this.highlightEnd = end
-        invalidate()
-    }
-
-    private fun updateStaticLayout() {
-//        text?.let {
-//            val width = width - paddingLeft - paddingRight
-//            staticLayout = StaticLayout.Builder.obtain(it, 0, it.length, textPaint, width)
-//                .setAlignment(Layout.Alignment.ALIGN_NORMAL)
-//                .setLineSpacing(1f, 1f)
-//                .setIncludePad(true)
-//                .build()
-//            highlightedStaticLayout =
-//                StaticLayout.Builder.obtain(it, 0, it.length, highlightedTextPaint, width)
-//                    .setAlignment(Layout.Alignment.ALIGN_NORMAL)
-//                    .setLineSpacing(1f, 1f)
-//                    .setIncludePad(true)
-//                    .build()
-//            invalidate() // Redraw the view
-//        }
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -489,7 +450,6 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
             isTouching = false
             if (hasLrc() && !isFling) {
-                // TODO 应该为Timeline独立设置一个Enable开关, 这样就可以不需要等待Timeline消失
 //                postDelayed(hideTimelineRunnable, TIMELINE_KEEP_TIME)
             }
         }
@@ -514,8 +474,6 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         mCurrentOffset = 0f
         mViewPortOffset = 0f
         currentLine = 0
-        text = null
-        textWidth = 0f
         invalidate()
     }
 

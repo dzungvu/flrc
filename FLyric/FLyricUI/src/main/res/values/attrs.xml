@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="FLyricUIView">
+        <attr name="normalTextColor" format="color" />
+        <attr name="highlightedTextColor" format="color" />
+        <attr name="textAlignMode" format="enum">
+            <enum name="align_normal" value="0" />
+            <enum name="align_center" value="1" />
+            <enum name="align_opposite" value="2" />
+        </attr>
+        <attr name="textSize" format="dimension" />
+    </declare-styleable>
+</resources>

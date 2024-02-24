@@ -25,9 +25,12 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="@id/guideline_top"
-        app:layout_constraintEnd_toEndOf="@id/guideline_end"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:highlightedTextColor="#FFEB3B"
+        app:textAlignMode="align_center"
+        app:textSize="20sp"/>
 
     <Button
         android:id="@+id/btn_start"

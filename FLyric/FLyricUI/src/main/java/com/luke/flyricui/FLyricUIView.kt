@@ -41,6 +41,8 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
     private var textAlignMode = Layout.Alignment.ALIGN_CENTER
     private var normalTextColor = Color.WHITE
     private var highlightedTextColor = Color.RED
+    private var fontSize = 16f
+    private var mTypeface: Typeface? = null
     //endregion
 
     //view util value
@@ -52,18 +54,22 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
     //endregion
 
     //region handle karaoke animation
-    private var textPaint: TextPaint = TextPaint().apply {
-        isAntiAlias = true
-        color = normalTextColor
-        textSize = TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_SP,
-            16f,
-            context.resources.displayMetrics
-        )
-        typeface = Typeface.DEFAULT
+    private val textPaint: TextPaint by lazy {
+        TextPaint().apply {
+            isAntiAlias = true
+            color = normalTextColor
+            textSize = TypedValue.applyDimension(
+                TypedValue.COMPLEX_UNIT_SP,
+                fontSize,
+                context.resources.displayMetrics
+            )
+            typeface = mTypeface
+        }
     }
-    private var highlightedTextPaint: TextPaint = TextPaint(textPaint).apply {
-        color = highlightedTextColor
+    private val highlightedTextPaint: TextPaint by lazy {
+        TextPaint(textPaint).apply {
+            color = highlightedTextColor
+        }
     }
 
     //region timeline
@@ -188,6 +194,32 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         }
     }
     //endregion
+
+
+    init {
+        context.theme.obtainStyledAttributes(
+            attrs,
+            R.styleable.FLyricUIView,
+            0, 0
+        ).apply {
+            try {
+                textAlignMode = when (getInt(R.styleable.FLyricUIView_textAlignMode, 1)) {
+                    0 -> Layout.Alignment.ALIGN_NORMAL
+                    1 -> Layout.Alignment.ALIGN_CENTER
+                    2 -> Layout.Alignment.ALIGN_OPPOSITE
+                    else -> Layout.Alignment.ALIGN_CENTER
+                }
+                normalTextColor = getColor(R.styleable.FLyricUIView_normalTextColor, Color.WHITE)
+                highlightedTextColor = getColor(R.styleable.FLyricUIView_highlightedTextColor, Color.RED)
+                fontSize = getDimension(R.styleable.FLyricUIView_textSize, 16f)
+//                mTypeface = getString(R.styleable.FLyricUIView_typeface)?.let {
+//                    Typeface.createFromAsset(context.assets, it)
+//                }
+            } finally {
+                recycle()
+            }
+        }
+    }
 
     override fun computeScroll() {
         if (scroller.computeScrollOffset()) {

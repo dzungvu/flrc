@@ -124,27 +124,40 @@ object LyricUtil {
                 wordIndex += 1
             }
             val timeString = matcher.group(0) ?: ""
-            splitStrings.removeFirst().let { word ->
-                entryList.add(
-                    LyricData.Word(
-                        index = wordIndex,
-                        startMs = TimestampUtils.string2Timestamp(
-                            timeString.substring(
-                                1,
-                                timeString.length - 1
-                            )
-                        ),
-                        endMs = null,
-                        rawValue = timeString,
-                        content = word,
-                        startInSentenceMs = 0,
-                        msPerPx = 0f,
-                        wordOffset = 0f
+            if(splitStrings.isNotEmpty()) {
+                splitStrings.removeFirst().let { word ->
+                    entryList.add(
+                        LyricData.Word(
+                            index = wordIndex,
+                            startMs = TimestampUtils.string2Timestamp(
+                                timeString.substring(
+                                    1,
+                                    timeString.length - 1
+                                )
+                            ),
+                            endMs = null,
+                            rawValue = timeString,
+                            content = word,
+                            startInSentenceMs = 0,
+                            msPerPx = 0f,
+                            wordOffset = 0f
+                        )
                     )
-                )
 
-                stringBuilder.append(word)
-                wordIndex += 1
+                    stringBuilder.append(word)
+                    wordIndex += 1
+                }
+            } else {
+                try {
+                    entryList.get(entryList.size - 1).endMs = TimestampUtils.string2Timestamp(
+                        timeString.substring(
+                            1,
+                            timeString.length - 1
+                        )
+                    )
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
 
         }
@@ -157,7 +170,9 @@ object LyricUtil {
                 startInSentenceMs += entryList[i].endMs!! - entryList[i].startMs
             }
             entryList.last().apply {
-                this.endMs = startMs + 1000
+                if (this.endMs == null) {
+                    this.endMs = lineStartTime + 1000
+                }
                 this.startInSentenceMs = startInSentenceMs
             }
         }

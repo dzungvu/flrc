@@ -392,14 +392,14 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         }
     }
 
-    fun startKaraokeAnimation(duration: Long = 0) {
+    fun startKaraokeAnimation(duration: Long? = null) {
         val endValue = lyricData?.lyrics?.last()?.let { lastLyric ->
             if(lastLyric.words.isNotEmpty()) {
                 lastLyric.words.last().endMs
             } else {
-                lastLyric.endMs ?: duration
+                lastLyric.endMs ?: duration ?: (lastLyric.startMs + 10_000)
             }
-        } ?: duration
+        } ?: duration ?: 0
 
         val animator = ValueAnimator.ofFloat(0f, endValue.toFloat())
         animator.addUpdateListener { animation ->

@@ -5,4 +5,6 @@
     <string name="pause">Pause</string>
     <string name="start">Start</string>
     <string name="resume">Resume</string>
+    <string name="seek_forward">Seek forward</string>
+    <string name="seek_backward">Seek backward</string>
 </resources>

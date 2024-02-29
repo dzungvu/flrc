@@ -1,6 +1,5 @@
 package com.luke.flyricui
 
-import android.animation.Animator
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
@@ -96,8 +95,8 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         getter = { mViewPortOffset },
         setter = { value ->
 //            if (!isShowTimeline.value && !isTouching && !isFling) {
-                mViewPortOffset = value
-                invalidate()
+            mViewPortOffset = value
+            invalidate()
 //            }
         }
     ).withSpringForceProperties {
@@ -113,7 +112,7 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
             mCurrentOffset = value
 
 //            if (!isShowTimeline.value && !isTouching && !isFling) {
-                viewPortSpringAnimator.animateToFinalPosition(animateTargetOffset)
+            viewPortSpringAnimator.animateToFinalPosition(animateTargetOffset)
 //            }
             invalidate()
         }
@@ -144,7 +143,7 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
     private val mSimpleOnGestureListener = object : GestureDetector.SimpleOnGestureListener() {
         override fun onDown(e: MotionEvent): Boolean {
 //            if (hasLrc() && onPlayClickListener != null) {
-            if(hasLrc()) {
+            if (hasLrc()) {
                 scroller.forceFinished(true)
 //                removeCallbacks(hideTimelineRunnable)
                 isTouching = true
@@ -161,16 +160,16 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
             distanceY: Float
         ): Boolean {
 //            if (hasLrc()) {
-                // 如果没显示 Timeline 的时候，distanceY 一段距离后再显示时间线
+            // 如果没显示 Timeline 的时候，distanceY 一段距离后再显示时间线
 //                if (!isShowTimeline.value && abs(distanceY) >= 10) {
-                    // 滚动显示时间线
+            // 滚动显示时间线
 //                    isShowTimeline.value = true
 //                }
             mViewPortOffset += -distanceY
             mViewPortOffset = mViewPortOffset.coerceIn(minOffset, maxOffset)
 //            Log.d("FLyricUIView", "onScroll: $mViewPortOffset")
-                invalidate()
-                return true
+            invalidate()
+            return true
 //            }
 //            return super.onScroll(e1, e2, distanceX, distanceY)
         }
@@ -212,7 +211,8 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
                     else -> Layout.Alignment.ALIGN_CENTER
                 }
                 normalTextColor = getColor(R.styleable.FLyricUIView_normalTextColor, Color.WHITE)
-                highlightedTextColor = getColor(R.styleable.FLyricUIView_highlightedTextColor, Color.RED)
+                highlightedTextColor =
+                    getColor(R.styleable.FLyricUIView_highlightedTextColor, Color.RED)
                 fontSize = getDimension(R.styleable.FLyricUIView_textSize, 16f)
 //                mTypeface = getString(R.styleable.FLyricUIView_typeface)?.let {
 //                    Typeface.createFromAsset(context.assets, it)
@@ -329,7 +329,7 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
             yOffset += staticLayout.height
 
             //region calculate for word
-            if(lyric.words.isNotEmpty()) {
+            if (lyric.words.isNotEmpty()) {
                 var wordOffset = getStartTextOffsetInStaticLayout(
                     staticLayout = staticLayout,
                     lyric = lyric
@@ -348,10 +348,13 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         }
     }
 
-    private fun getStartTextOffsetInStaticLayout(staticLayout: StaticLayout, lyric: LyricData.Lyric): Float {
+    private fun getStartTextOffsetInStaticLayout(
+        staticLayout: StaticLayout,
+        lyric: LyricData.Lyric
+    ): Float {
         val layoutWidth = staticLayout.width
         val textWidth = lyric.width
-        return when(staticLayout.alignment) {
+        return when (staticLayout.alignment) {
             null,
             Layout.Alignment.ALIGN_NORMAL -> {
                 0f
@@ -376,7 +379,7 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
     }
 
     private fun getOffset(line: Int): Float {
-        return if(line in 0 until offsetKeeper.size) {
+        return if (line in 0 until offsetKeeper.size) {
             startOffset - (offsetKeeper[line] ?: 0f)
         } else {
             0f
@@ -384,19 +387,22 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
     }
 
     private fun smoothScrollTo(line: Int) {
-        if(!isTouching) {
+        if (!isTouching) {
             val offset = getOffset(line)
             animateStartOffset = mCurrentOffset
             animateTargetOffset = offset
             progressSpringAnimator.animateToFinalPosition(offset)
             Log.d("FLyricUIView", "current highlight line: $line")
-            Log.d("FLyricUIView", "current highlight text: ${lyricData?.lyrics?.get(line)?.content}")
+            Log.d(
+                "FLyricUIView",
+                "current highlight text: ${lyricData?.lyrics?.get(line)?.content}"
+            )
         }
     }
 
     fun startKaraokeAnimation(duration: Long? = null) {
         val endValue = lyricData?.lyrics?.last()?.let { lastLyric ->
-            if(lastLyric.words.isNotEmpty()) {
+            if (lastLyric.words.isNotEmpty()) {
                 lastLyric.words.last().endMs
             } else {
                 lastLyric.endMs ?: duration ?: (lastLyric.startMs + 10_000)
@@ -436,6 +442,9 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         return animator?.isRunning == true
     }
 
+    fun seekAnimationToValue(value: Long) {
+        animator?.currentPlayTime = value
+    }
 
 
     private fun setCurrentTime(currentTime: Long) {
@@ -446,7 +455,10 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
             smoothScrollTo(index)
         }
         currentWord = findLyricWord(currentTime, currentLine)
-        Log.d("FLyricUIView", "setCurrentTime: $currentTime with line start time: ${lyricData?.lyrics?.get(index)?.startMs}")
+        Log.d(
+            "FLyricUIView",
+            "setCurrentTime: $currentTime with line start time: ${lyricData?.lyrics?.get(index)?.startMs}"
+        )
         invalidate()
 
     }
@@ -466,9 +478,12 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         canvas.translate(0f, mViewPortOffset)
         lyricData?.lyrics?.let { lyrics ->
             lyrics.forEachIndexed { index, lyric ->
-                if(index == currentLine) {
-                    Log.d("FLyricUIView", "listWordSize = ${lyric.words.size} currentWord: ${currentWord?.content} curTime: $currentTime wordStartMs: ${currentWord?.startMs} curWordMsPx: ${currentWord?.msPerPx}")
-                    if(lyric.words.isEmpty()) {
+                if (index == currentLine) {
+                    Log.d(
+                        "FLyricUIView",
+                        "listWordSize = ${lyric.words.size} currentWord: ${currentWord?.content} curTime: $currentTime wordStartMs: ${currentWord?.startMs} curWordMsPx: ${currentWord?.msPerPx}"
+                    )
+                    if (lyric.words.isEmpty()) {
                         val staticLayout = highlightedStaticLayouts[index]
                         canvas.save()
                         canvas.translate(0f, offsetKeeper[index] ?: 0f)
@@ -478,7 +493,10 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
                         currentWord?.let { currentWord ->
                             val staticLayout = normalStaticLayouts[index]
                             val highlightedStaticLayout = highlightedStaticLayouts[index]
-                            highlightEnd = calculateOffsetForHighlightEnd(currentTime = currentTime, currentWord = currentWord)
+                            highlightEnd = calculateOffsetForHighlightEnd(
+                                currentTime = currentTime,
+                                currentWord = currentWord
+                            )
 
                             canvas.save()
                             canvas.translate(0f, offsetKeeper[index] ?: 0f)
@@ -514,9 +532,15 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         return gestureDetector.onTouchEvent(event)
     }
 
-    private fun calculateOffsetForHighlightEnd(currentTime: Long, currentWord: LyricData.Word): Float {
+    private fun calculateOffsetForHighlightEnd(
+        currentTime: Long,
+        currentWord: LyricData.Word
+    ): Float {
         return (currentWord.wordOffset + ((currentTime - currentWord.startMs) * currentWord.msPerPx)).also {
-            Log.d("FLyricUIView", "curWord: ${currentWord.content} curTime: $currentTime wordStartMs: ${currentWord.startMs} curWordMsPx: ${currentWord.msPerPx} curWordOffset: ${currentWord.wordOffset} ==> highlightEnd: $it")
+            Log.d(
+                "FLyricUIView",
+                "curWord: ${currentWord.content} curTime: $currentTime wordStartMs: ${currentWord.startMs} curWordMsPx: ${currentWord.msPerPx} curWordOffset: ${currentWord.wordOffset} ==> highlightEnd: $it"
+            )
         }
     }
 

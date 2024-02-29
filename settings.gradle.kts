@@ -17,3 +17,4 @@ rootProject.name = "FLyricViewDemo"
 include(":app")
 include(":FLyric:FLyricParser")
 include(":FLyric:FLyricUI")
+include(":mediamixer")

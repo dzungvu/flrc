@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun prepareSongLyric() {
         lyricView.postDelayed({
-            lyricView.setLyricData(R.raw.sample)
+            lyricView.setLyricData(R.raw.sample_en)
         }, 1000)
     }
 

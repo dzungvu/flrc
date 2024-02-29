@@ -148,6 +148,8 @@ object LyricUtil {
                     wordIndex += 1
                 }
             } else {
+                //if there is no word after the time, it means the time is the end time of the sentence
+                //update the end time of the last word
                 try {
                     entryList.get(entryList.size - 1).endMs = TimestampUtils.string2Timestamp(
                         timeString.substring(
@@ -171,7 +173,7 @@ object LyricUtil {
             }
             entryList.last().apply {
                 if (this.endMs == null) {
-                    this.endMs = lineStartTime + 1000
+                    this.endMs = startMs + 1000
                 }
                 this.startInSentenceMs = startInSentenceMs
             }

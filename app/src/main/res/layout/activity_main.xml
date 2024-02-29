@@ -14,11 +14,11 @@
         app:layout_constraintGuide_percent=".5" />
 
     <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_end"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:id="@+id/guideline_end"
         android:orientation="vertical"
-        app:layout_constraintGuide_percent=".7"/>
+        app:layout_constraintGuide_percent=".7" />
 
     <com.luke.flyricui.FLyricUIView
         android:id="@+id/f_lyric_ui_view"
@@ -27,7 +27,7 @@
         app:layout_constraintBottom_toBottomOf="@id/guideline_top"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/btn_start"
@@ -36,5 +36,21 @@
         android:layout_marginTop="16dp"
         android:text="@string/start"
         app:layout_constraintTop_toTopOf="@id/guideline_top" />
+
+    <Button
+        android:id="@+id/btn_seek_forward"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/seek_forward"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_start" />
+
+    <Button
+        android:id="@+id/btn_seek_backward"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/seek_backward"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btn_start" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

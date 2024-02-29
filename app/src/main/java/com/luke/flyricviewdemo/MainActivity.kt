@@ -12,6 +12,7 @@ class MainActivity : AppCompatActivity() {
 
     private val mediaPlayer = MediaPlayer()
     private val lyricView by lazy { findViewById<FLyricUIView>(R.id.f_lyric_ui_view) }
+    private val btnStart: Button by lazy { findViewById(R.id.btn_start) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,12 +23,50 @@ class MainActivity : AppCompatActivity() {
 
     private fun bindUI() {
         val lyricView = findViewById<FLyricUIView>(R.id.f_lyric_ui_view)
-        val btnStart = findViewById<Button>(R.id.btn_start)
 
         btnStart.setOnClickListener {
-            lyricView.startKaraokeAnimation()
-            mediaPlayer.start()
+            when (btnStart.text) {
+                getString(R.string.start) -> {
+                    startKaraoke()
+                    btnStart.text = getString(R.string.pause)
+                }
+
+                getString(R.string.pause) -> {
+                    pauseKaraoke()
+                    btnStart.text = if (lyricView.isKaraokeAnimationRunning()) {
+                        getString(R.string.resume)
+                    } else {
+                        getString(R.string.start)
+                    }
+                }
+
+                getString(R.string.resume) -> {
+                    resumeKaraoke()
+                    btnStart.text = getString(R.string.pause)
+                }
+
+                else -> {
+                    if (lyricView.isKaraokeAnimationRunning()) {
+                        resumeKaraoke()
+                    }
+                }
+            }
         }
+    }
+
+    private fun startKaraoke() {
+        lyricView.startKaraokeAnimation()
+        mediaPlayer.start()
+    }
+
+    private fun pauseKaraoke() {
+        lyricView.pauseKaraokeAnimation()
+        mediaPlayer.pause()
+    }
+
+    private fun resumeKaraoke() {
+        lyricView.resumeKaraokeAnimation()
+        mediaPlayer.start()
     }
 
     private fun bindData() {
@@ -50,6 +89,10 @@ class MainActivity : AppCompatActivity() {
             .appendPath(resources.getResourceEntryName(songResource))
             .build()
         mediaPlayer.setDataSource(this, uriSong)
+        mediaPlayer.setOnCompletionListener {
+            lyricView.stopKaraokeAnimation()
+            btnStart.text = getString(R.string.start)
+        }
         mediaPlayer.prepare()
     }
 }

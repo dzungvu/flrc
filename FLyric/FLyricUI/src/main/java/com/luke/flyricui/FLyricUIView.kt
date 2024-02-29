@@ -1,5 +1,6 @@
 package com.luke.flyricui
 
+import android.animation.Animator
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
@@ -54,6 +55,7 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
     //endregion
 
     //region handle karaoke animation
+    var animator: ValueAnimator? = null
     private val textPaint: TextPaint by lazy {
         TextPaint().apply {
             isAntiAlias = true
@@ -401,16 +403,40 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
             }
         } ?: duration ?: 0
 
-        val animator = ValueAnimator.ofFloat(0f, endValue.toFloat())
-        animator.addUpdateListener { animation ->
-            val animatedValue = animation.animatedValue as Float
-            setCurrentTime(animatedValue.toLong())
+        animator = ValueAnimator.ofFloat(0f, endValue.toFloat()).apply {
+            addUpdateListener { animation ->
+                val animatedValue = animation.animatedValue as Float
+                setCurrentTime(animatedValue.toLong())
+            }
+            interpolator = LinearInterpolator()
+            setDuration(endValue)
         }
-        animator.interpolator = LinearInterpolator()
-        animator.duration = endValue
-        animator.start()
+        animator?.start()
+
         Log.d("FLyricUIView", "startKaraokeAnimation")
     }
+
+    fun stopKaraokeAnimation() {
+        animator?.cancel()
+        animator = null
+        Log.d("FLyricUIView", "stopKaraokeAnimation")
+    }
+
+    fun pauseKaraokeAnimation() {
+        animator?.pause()
+        Log.d("FLyricUIView", "pauseKaraokeAnimation")
+    }
+
+    fun resumeKaraokeAnimation() {
+        animator?.resume()
+        Log.d("FLyricUIView", "resumeKaraokeAnimation")
+    }
+
+    fun isKaraokeAnimationRunning(): Boolean {
+        return animator?.isRunning == true
+    }
+
+
 
     private fun setCurrentTime(currentTime: Long) {
         this.currentTime = currentTime

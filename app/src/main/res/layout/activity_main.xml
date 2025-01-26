@@ -24,7 +24,7 @@
         android:id="@+id/f_lyric_ui_view"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:textSize="10sp"
+        app:textSize="8sp"
         app:layout_constraintBottom_toBottomOf="@id/guideline_top"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

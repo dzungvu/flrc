@@ -538,44 +538,40 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
                             val staticLayout = normalStaticLayouts[index]
                             val highlightedStaticLayout = highlightedStaticLayouts[index]
 
-                            // If the current highlighted line index is greater than 0,
-                            // highlight all the previous lines
-                            if (currentWord.wordInLine != 0) {
-                                for (line in 0 until currentWord.wordInLine) {
-                                    canvas.save()
-                                    canvas.translate(0f, offsetKeeper[index] ?: 0f)
-                                    canvas.clipRect(
-                                        0f,
-                                        (line * 100).toFloat(),
-                                        width.toFloat(),
-                                        100.3656f
-                                    )
-                                    highlightedStaticLayout.draw(canvas)
-                                    canvas.restore()
-                                }
-                            }
-
-                            // If the current highlighted line index is less than the total line count,
-                            // draw all the next lines with non-highlighted text
-                            if (currentWord.wordInLine < staticLayout.lineCount - 1) {
-                                for (line in currentWord.wordInLine + 1 until (staticLayout.lineCount + 1)) {
-                                    canvas.save()
-                                    canvas.translate(0f, offsetKeeper[index] ?: 0f)
-                                    canvas.clipRect(
-                                        0f,
-                                        (line * 100).toFloat(),
-                                        width.toFloat(),
-                                        100.3656f
-                                    )
-                                    staticLayout.draw(canvas)
-                                    canvas.restore()
-                                }
-                            }
-
                             val highlightedRect = calculateOffsetForHighlightEnd(
                                 currentTime = currentTime,
                                 currentWord = currentWord,
                             )
+
+                            // If the current highlighted line index is greater than 0,
+                            // highlight all the previous lines
+                            if (currentWord.wordInLine != 0) {
+                                canvas.save()
+                                canvas.translate(0f, offsetKeeper[index] ?: 0f)
+                                canvas.clipRect(
+                                    0f,
+                                    0f,
+                                    width.toFloat(),
+                                    highlightedRect.top.toFloat()
+                                )
+                                highlightedStaticLayout.draw(canvas)
+                                canvas.restore()
+                            }
+
+                            // If the current highlighted line index is less than the total line count,
+                            // draw all the next lines with non-highlighted text
+                            if(currentWord.wordInLine < staticLayout.lineCount - 1) {
+                                canvas.save()
+                                canvas.translate(0f, offsetKeeper[index] ?: 0f)
+                                canvas.clipRect(
+                                    0f,
+                                    highlightedRect.bottom.toFloat(),
+                                    width.toFloat(),
+                                    height.toFloat()
+                                )
+                                staticLayout.draw(canvas)
+                                canvas.restore()
+                            }
 
                             canvas.save()
                             canvas.translate(0f, offsetKeeper[index] ?: 0f)

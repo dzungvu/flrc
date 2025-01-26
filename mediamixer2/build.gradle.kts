@@ -1,23 +1,18 @@
 plugins {
-    id("com.android.application")
+    id("com.android.library")
     id("org.jetbrains.kotlin.android")
 }
 
 android {
-    namespace = "com.luke.flyricviewdemo"
+    namespace = "com.luke.mediamixer2"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.luke.flyricviewdemo"
         minSdk = 23
-        targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
     }
-
-
 
     buildTypes {
         release {
@@ -35,10 +30,6 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
-
-    buildFeatures {
-        viewBinding = true
-    }
 }
 
 dependencies {
@@ -46,12 +37,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.11.0")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
-
-    implementation(project(":FLyric:FLyricParser"))
-    implementation(project(":FLyric:FLyricUI"))
-    implementation(project(":mediamixer2"))
 }

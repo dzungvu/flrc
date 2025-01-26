@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:fitsSystemWindows="false">
+
+
+    <SurfaceView
+        android:id="@+id/surfaceView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        />
+    <!--    <androidx.camera.view.PreviewView-->
+    <!--        android:id="@+id/previewView"-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="match_parent" />-->
+
+
+    <Button
+        android:id="@+id/ibRecordAudio"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/ibRecordVideo"
+        android:background="#FF0000"
+        android:text="Audio"
+        />
+    <Button
+        android:id="@+id/ibRecordVideo"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/ibRecordAudio"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:background="#FF0000"
+        android:text="Video"
+        />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

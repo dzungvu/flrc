@@ -1,5 +1,6 @@
 package com.luke.flyricparser.utils
 
+import android.text.StaticLayout
 import android.text.TextUtils
 import android.text.format.DateUtils
 import com.luke.flyricparser.models.LyricData
@@ -11,7 +12,7 @@ object LyricUtil {
     private val PATTERN_TIME = Pattern.compile("\\[(\\d\\d):(\\d\\d)\\.(\\d{2,3})]")
 
     private val PATTERN_WORD = Pattern.compile("((<\\d{2}:\\d{2}\\.\\d{1,3}>)+)")
-    fun parseLine(line: String, lineIndex: Int): ArrayList<LyricData.Lyric>? {
+    fun parseLine(line: String, lineIndex: Int, staticLayout: StaticLayout? = null): ArrayList<LyricData.Lyric>? {
         val entryList = ArrayList<LyricData.Lyric>()
         try {
             var lyricLine = line
@@ -116,7 +117,8 @@ object LyricUtil {
                             content = it,
                             startInSentenceMs = 0,
                             msPerPx = 0f,
-                            wordOffset = 0f
+                            wordOffset = 0f,
+                            wordInLine = 0, // init value, this will update later
                         )
                     )
                     stringBuilder.append(it)
@@ -140,7 +142,8 @@ object LyricUtil {
                             content = word,
                             startInSentenceMs = 0,
                             msPerPx = 0f,
-                            wordOffset = 0f
+                            wordOffset = 0f,
+                            wordInLine = 0, // init value, this will be updated later
                         )
                     )
 

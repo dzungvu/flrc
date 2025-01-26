@@ -1,6 +1,7 @@
 package com.luke.flyricviewdemo
 
 import android.content.ContentResolver
+import android.content.Intent
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
@@ -13,6 +14,7 @@ class MainActivity : AppCompatActivity() {
     private val mediaPlayer = MediaPlayer()
     private val lyricView by lazy { findViewById<FLyricUIView>(R.id.f_lyric_ui_view) }
     private val btnStart: Button by lazy { findViewById(R.id.btn_start) }
+    private val btnRestart: Button by lazy { findViewById(R.id.btn_restart) }
     private val btnSeekForward: Button by lazy { findViewById(R.id.btn_seek_forward) }
     private val btnSeekBackward: Button by lazy { findViewById(R.id.btn_seek_backward) }
 
@@ -25,6 +27,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun bindUI() {
         val lyricView = findViewById<FLyricUIView>(R.id.f_lyric_ui_view)
+        val btnStartRecordScreen = findViewById<Button>(R.id.btn_start_record_screen)
 
         btnStart.setOnClickListener {
             when (btnStart.text) {
@@ -60,6 +63,17 @@ class MainActivity : AppCompatActivity() {
         }
         btnSeekBackward.setOnClickListener {
             seekBackward()
+        }
+        btnStartRecordScreen.setOnClickListener {
+            val intent = Intent(this, RecordActivity::class.java)
+            if(lyricView.isKaraokeAnimationRunning()) {
+                pauseKaraoke()
+            }
+            startActivity(intent)
+        }
+
+        btnRestart.setOnClickListener {
+            bindData()
         }
     }
 
@@ -100,6 +114,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun prepareMediaPlayer() {
+        mediaPlayer.reset()
+
         val songResource = R.raw.mp3_earnedit
         val uriSong = Uri.Builder()
             .scheme(ContentResolver.SCHEME_ANDROID_RESOURCE)

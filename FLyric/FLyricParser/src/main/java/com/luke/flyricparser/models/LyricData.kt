@@ -23,7 +23,9 @@ data class LyricData(
         //region UI related
         var startInSentenceMs: Long, // time this word is started in sentence
         var msPerPx: Float, // ms per pixel
-        var wordOffset: Float // offset of word in sentence
+        var wordOffset: Float, // offset of word in sentence
+
+        var wordInLine: Int, // a lyric can be place in multiple lines, this is the index of the line
 
     )
 

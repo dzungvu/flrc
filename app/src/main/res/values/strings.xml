@@ -4,7 +4,16 @@
     <string name="lorem_text_2">Lorem Ipsum is simply dummy text</string>
     <string name="pause">Pause</string>
     <string name="start">Start</string>
+    <string name="restart">Restart</string>
     <string name="resume">Resume</string>
     <string name="seek_forward">Seek forward</string>
     <string name="seek_backward">Seek backward</string>
+    <string name="go_to_record">Go to record</string>
+    <string name="record">Record</string>
+    <string name="stop">Stop</string>
+    <string name="merge_audio">Merge Audio</string>
+    <string name="play_dual_warning_dialog_no_permission_record_video">Vui lòng cấp quyền micro, camera, lưu giữ để ứng dụng có thể ghi âm thanh và hình ảnh!</string>
+    <string name="play_dual_warning_dialog_no_permission_record_audio">Vui lòng cấp quyền mirco, lưu giữ để ứng dụng có thể ghi âm thanh!</string>
+
+
 </resources>

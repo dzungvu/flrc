@@ -9,6 +9,7 @@ import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import android.util.AttributeSet
+import android.util.DisplayMetrics
 import android.util.Log
 import android.util.TypedValue
 import android.view.GestureDetector
@@ -41,7 +42,7 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
     private var textAlignMode = Layout.Alignment.ALIGN_CENTER
     private var normalTextColor = Color.WHITE
     private var highlightedTextColor = Color.RED
-    private var fontSize = 16f
+    private var fontSize = 30f
     private var mTypeface: Typeface? = null
     //endregion
 
@@ -78,6 +79,7 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
     private var currentWord: LyricData.Word? = null
     private var currentTime = 0L
     private var highlightEnd = 0f
+    private var highlightEndY = 0f
     //endregion
 
     //region smooth scroll
@@ -306,6 +308,9 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         var yOffset = 0f
         val width = width - paddingLeft - paddingRight
         lyricData.lyrics.forEachIndexed { index, lyric ->
+            var lyricLine = 0 // 0 means single line, greater than 0 means multi line (initial value is 0)
+
+
             val text = lyric.content
             val staticLayout = StaticLayout.Builder.obtain(text, 0, text.length, textPaint, width)
                 .setAlignment(textAlignMode)
@@ -334,7 +339,7 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
                     staticLayout = staticLayout,
                     lyric = lyric
                 )
-                lyric.words.forEach {
+                lyric.words.forEachIndexed { wordIndex, it ->
                     val wordWidth = staticLayout.paint.measureText(it.content)
                     it.endMs?.let { endMs ->
                         val wordDuration = endMs - it.startMs
@@ -342,7 +347,18 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
                     }
 
                     it.wordOffset = wordOffset
+                    it.wordInLine = lyricLine
                     wordOffset += (wordWidth + spaceWidth)
+                    if(wordOffset > getScreenWidth(context)) {
+                        lyricLine += 1
+
+                        wordOffset = getStartTextOffsetInStaticLayout(
+                            staticLayout = staticLayout,
+                            lyric = lyric.copy(
+                                width = textPaint.measureText(joinFromIndex(lyric.words.map { it.content }, wordIndex))
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -455,10 +471,10 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
             smoothScrollTo(index)
         }
         currentWord = findLyricWord(currentTime, currentLine)
-        Log.d(
-            "FLyricUIView",
-            "setCurrentTime: $currentTime with line start time: ${lyricData?.lyrics?.get(index)?.startMs}"
-        )
+//        Log.d(
+//            "FLyricUIView",
+//            "setCurrentTime: $currentTime with line start time: ${lyricData?.lyrics?.get(index)?.startMs}"
+//        )
         invalidate()
 
     }
@@ -479,10 +495,10 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         lyricData?.lyrics?.let { lyrics ->
             lyrics.forEachIndexed { index, lyric ->
                 if (index == currentLine) {
-                    Log.d(
-                        "FLyricUIView",
-                        "listWordSize = ${lyric.words.size} currentWord: ${currentWord?.content} curTime: $currentTime wordStartMs: ${currentWord?.startMs} curWordMsPx: ${currentWord?.msPerPx}"
-                    )
+//                    Log.d(
+//                        "FLyricUIView",
+//                        "listWordSize = ${lyric.words.size} currentWord: ${currentWord?.content} curTime: $currentTime wordStartMs: ${currentWord?.startMs} curWordMsPx: ${currentWord?.msPerPx}"
+//                    )
                     if (lyric.words.isEmpty()) {
                         val staticLayout = highlightedStaticLayouts[index]
                         canvas.save()
@@ -493,22 +509,54 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
                         currentWord?.let { currentWord ->
                             val staticLayout = normalStaticLayouts[index]
                             val highlightedStaticLayout = highlightedStaticLayouts[index]
-                            highlightEnd = calculateOffsetForHighlightEnd(
+
+                            if(currentWord.wordInLine != 0) {
+                                for (line in 0 until currentWord.wordInLine) {
+                                    canvas.save()
+                                    canvas.translate(0f, offsetKeeper[index] ?: 0f)
+                                    canvas.clipRect(0f, (line * 100).toFloat(), width.toFloat(), 100.3656f)
+                                    highlightedStaticLayout.draw(canvas)
+                                    canvas.restore()
+                                }
+                            }
+
+                            if(currentWord.wordInLine < staticLayout.lineCount - 1) {
+                                for (line in currentWord.wordInLine + 1 until (staticLayout.lineCount + 1)) {
+                                    canvas.save()
+                                    canvas.translate(0f, offsetKeeper[index] ?: 0f)
+                                    canvas.clipRect(0f, (line * 100).toFloat(), width.toFloat(), 100.3656f)
+                                    staticLayout.draw(canvas)
+                                    canvas.restore()
+                                }
+                            }
+
+                            val (horizontalOffset, verticalOffset) = calculateOffsetForHighlightEnd(
                                 currentTime = currentTime,
-                                currentWord = currentWord
+                                currentWord = currentWord,
+                                staticLayout = staticLayout
                             )
+                            highlightEnd = horizontalOffset
+                            highlightEndY = verticalOffset
 
                             canvas.save()
                             canvas.translate(0f, offsetKeeper[index] ?: 0f)
-                            canvas.clipRect(0f, 0f, highlightEnd, height.toFloat())
+                            canvas.clipRect(0f, (currentWord.wordInLine * 100).toFloat(), highlightEnd, highlightEndY)
                             highlightedStaticLayout.draw(canvas)
                             canvas.restore()
 
                             canvas.save()
                             canvas.translate(0f, offsetKeeper[index] ?: 0f)
-                            canvas.clipRect(highlightEnd, 0f, width.toFloat(), height.toFloat())
+                            canvas.clipRect(highlightEnd, (currentWord.wordInLine * 100).toFloat(), width.toFloat(), highlightEndY)
                             staticLayout.draw(canvas)
                             canvas.restore()
+
+//                            if(staticLayout.lineCount > 1) {
+//                                canvas.save()
+//                                canvas.translate(0f, offsetKeeper[index] ?: 0f)
+//                                canvas.clipRect(0f, highlightEndY, width.toFloat(), height.toFloat())
+//                                staticLayout.draw(canvas)
+//                                canvas.restore()
+//                            }
                         }
                     }
                 } else {
@@ -534,14 +582,39 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
 
     private fun calculateOffsetForHighlightEnd(
         currentTime: Long,
-        currentWord: LyricData.Word
-    ): Float {
-        return (currentWord.wordOffset + ((currentTime - currentWord.startMs) * currentWord.msPerPx)).also {
-            Log.d(
-                "FLyricUIView",
-                "curWord: ${currentWord.content} curTime: $currentTime wordStartMs: ${currentWord.startMs} curWordMsPx: ${currentWord.msPerPx} curWordOffset: ${currentWord.wordOffset} ==> highlightEnd: $it"
-            )
+        currentWord: LyricData.Word,
+        staticLayout: StaticLayout
+    ): Pair<Float, Float> {
+        val horizontalOffset = currentWord.wordOffset + ((currentTime - currentWord.startMs) * currentWord.msPerPx)
+
+        // Calculate the line index based on the word offset
+        var lineIndex = 0
+        for (line in 0 until staticLayout.lineCount) {
+            val lineStart = staticLayout.getLineStart(line).toFloat()
+            val lineEnd = staticLayout.getLineEnd(line).toFloat()
+//            if (currentWord.wordOffset in lineStart..lineEnd) {
+//                lineIndex = line
+////                break
+//            }
         }
+
+//        val verticalOffset = lineIndex * textPaint.fontMetrics.bottom
+        val verticalOffset = -1 * textPaint.fontMetrics.top * (currentWord.wordInLine + 1) + (currentWord.wordInLine + 1) * textPaint.fontMetrics.bottom
+        Log.d(
+            "FLyricUIView",
+            "curWord: ${currentWord.content} curTime: $currentTime wordStartMs: ${currentWord.startMs} curWordMsPx: ${currentWord.msPerPx} curWordOffset: ${currentWord.wordOffset} - currentScreenWidth: ${getScreenWidth(context)} ==> highlightEnd: $horizontalOffset, verticalOffset: $verticalOffset"
+        )
+
+        Log.d(
+            "FLyricUIView",
+            "textPaint.fontMetrics.bottom: ${textPaint.fontMetrics.bottom} textPaint.fontMetrics.top: ${textPaint.fontMetrics.top}"
+        )
+
+        Log.d(
+            "FLyricUIView",
+            "curWord: ${currentWord.content} wordInternalLine: ${currentWord.wordInLine} wordOffset = ${currentWord.wordOffset} lineIndex = $lineIndex"
+        )
+        return Pair(horizontalOffset, verticalOffset)
     }
 
     private fun reset() {
@@ -559,4 +632,20 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         invalidate()
     }
 
+}
+
+
+fun getScreenWidth(context: Context): Int {
+    val displayMetrics = DisplayMetrics()
+    val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as android.view.WindowManager
+    windowManager.defaultDisplay.getMetrics(displayMetrics)
+    return displayMetrics.widthPixels
+}
+
+fun joinFromIndex(list: List<String>, startIndex: Int): String {
+    return if (startIndex in list.indices) {
+        list.subList(startIndex, list.size).joinToString(" ")
+    } else {
+        "" // Return an empty string if the startIndex is out of bounds
+    }
 }

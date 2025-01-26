@@ -1,5 +1,6 @@
 package com.luke.flyricparser.parser
 
+import android.text.StaticLayout
 import android.util.Log
 import com.luke.flyricparser.models.LyricData
 import com.luke.flyricparser.utils.LyricUtil
@@ -11,6 +12,11 @@ import java.io.InputStream
 import java.io.InputStreamReader
 
 class FLRCParser {
+
+//    suspend fun parseSourceWithStaticLayout(inputStream: InputStream, staticLayout: StaticLayout, onDone: (LyricData) -> Unit): LyricData {
+//        Log.d("FLRCParser", "Start parsing with static layout")
+//        val lyricData = LyricData
+//    }
 
     suspend fun parseSource(inputStream: InputStream, onDone: (LyricData) -> Unit): LyricData {
         Log.d("FLRCParser", "Start parsing")
@@ -36,7 +42,7 @@ class FLRCParser {
     }
 
 
-    private fun constructOneLine(line: String, lineIndex: Int): ArrayList<LyricData.Lyric>? {
+    private fun constructOneLine(line: String, lineIndex: Int, staticLayout: StaticLayout? = null): ArrayList<LyricData.Lyric>? {
         return LyricUtil.parseLine(line, lineIndex)
     }
 }

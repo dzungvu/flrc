@@ -79,8 +79,6 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
     private var currentLine = 0
     private var currentWord: LyricData.Word? = null
     private var currentTime = 0L
-    private var highlightEnd = 0f
-    private var highlightEndY = 0f
     //endregion
 
     //region smooth scroll
@@ -309,8 +307,7 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
         var yOffset = 0f
         val width = width - paddingLeft - paddingRight
         lyricData.lyrics.forEachIndexed { index, lyric ->
-            var lyricLine =
-                0 // 0 means single line, greater than 0 means multi line (initial value is 0)
+            var lyricLine = 0 // 0 means single line, greater than 0 means multi line (initial value is 0)
 
 
             val text = lyric.content
@@ -350,7 +347,7 @@ class FLyricUIView(context: Context, attrs: AttributeSet?) : View(context, attrs
 
                     it.wordOffset = wordOffset
                     it.wordInLine = lyricLine
-                    wordOffset += (wordWidth + spaceWidth)
+                    wordOffset += (wordWidth)
 
                     // Check if the next word can fit in the current line
                     // if not, move to the next line
